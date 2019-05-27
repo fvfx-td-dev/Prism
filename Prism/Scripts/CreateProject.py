@@ -194,16 +194,13 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 	@err_decorator
 	def fillDirStruct(self):
 		model = QStandardItemModel()
-		model.setHorizontalHeaderLabels(["Prefix","Name", "Type"])
+		model.setHorizontalHeaderLabels(["Prefix", "Name", "Type"])
 		self.tw_dirStruct.setModel(model)
 		self.tw_dirStruct.setColumnWidth(1,300)
 
-		self.addDir("Management", "Default")
-		self.addDir("Designs", "Default")
-		self.addDir("Workflow", "Scenes*")
-		self.addDir("Assets", "Assets*")
-		self.addDir("Dailies", "Dailies")
-
+		structure_config = self.core.config_reader.get_data("project_default_structure", key="default_config")
+		for dir in structure_config:
+			self.addDir(dir["name"], dir["type"])
 
 	@err_decorator
 	def dClickItem(self, index):
@@ -370,6 +367,7 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 		#create ini file
 
 		inipath = os.path.join(path, "00_Pipeline", "pipeline.ini")
+
 		for i in pfolders:
 			if i[1] == "Scenes*":
 				scname = i[0]

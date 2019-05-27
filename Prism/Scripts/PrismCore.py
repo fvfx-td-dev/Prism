@@ -44,6 +44,12 @@ else:
 
 prismRoot = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
+prismConfigRoot = os.path.join(prismRoot, "PrismConfig")
+if prismConfigRoot not in sys.path:
+	sys.path.append(prismConfigRoot)
+
+import ConfigReader
+
 try:
 	from PySide2.QtCore import *
 	from PySide2.QtGui import *
@@ -115,6 +121,8 @@ class PrismCore():
 	def __init__(self, app="Standalone", prismArgs=[]):
 		#QWidget.__init__(self)
 		self.prismIni = ""
+
+		self.config_reader = ConfigReader.ConfigReader()
 
 		try:
 			# set some general variables
@@ -2894,18 +2902,19 @@ current project.\n\nYour current version: %s\nVersion configured in project: %s\
 
 		ffmpegIsInstalled = False
 		if platform.system() == "Windows":
-			ffmpegPath = os.path.join(self.prismRoot, "Tools", "FFmpeg" ,"bin", "ffmpeg.exe")
+			ffmpegPath = os.path.join(self.prismRoot, "PrismFiles", "Tools", "FFmpeg" ,"bin", "ffmpeg.exe")
 			if os.path.exists(ffmpegPath):
 				ffmpegIsInstalled = True
 		elif platform.system() == "Linux":
-			ffmpegPath = "ffmpeg"
+			# ffmpegPath = "ffmpeg"
+			ffmpegPath = os.path.join(self.prismRoot, "PrismFiles", "Tools", "FFmpeg", "bin", "ffmpeg.exe")
 			try:
 				subprocess.Popen([ffmpegPath])
 				ffmpegIsInstalled = True
 			except:
 				pass
 		elif platform.system() == "Darwin":
-			ffmpegPath = os.path.join(self.prismRoot, "Tools", "ffmpeg")
+			ffmpegPath = os.path.join(self.prismRoot, "PrismFiles", "Tools", "ffmpeg")
 			if os.path.exists(ffmpegPath):
 				ffmpegIsInstalled = True
 

@@ -1,0 +1,28 @@
+{
+  "default_config": [
+    {
+      "name": "Management",
+      "type": "Default"
+    },
+    {
+      "name": "Designs",
+      "type": "Default"
+    },
+    {
+      "name": "Workflow",
+      "type": "Scenes*"
+    },
+    {
+      "name": "Assets",
+      "type": "Assets*"
+    },
+    {
+      "name": "Dailies",
+      "type": "Dailies*"
+    },
+    {
+      "name": "Out",
+      "type": "Default"
+    }
+  ]
+}

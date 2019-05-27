@@ -1,0 +1,20 @@
+
+default_config:
+  - 01:
+      name: "Management"
+      type: "Default"
+  - 02:
+      name: "Designs"
+      type: "Default"
+  - 03:
+      name: "Workflow"
+      type: "Scenes*"
+  - 04:
+      name: "Assets"
+      type: "Assets**"
+  - 05:
+      name: "Dailies"
+      type: "Dailies*"
+  - 06:
+      name: "Out"
+      type: "Default*"

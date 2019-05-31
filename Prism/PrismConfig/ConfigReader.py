@@ -8,10 +8,13 @@ class ConfigReader:
 
     def replace_keywords(self, str_with_kw):
         clean_str = str_with_kw
-
         clean_str = clean_str.replace("{config}", self.base_dir)
 
-        return clean_str
+        # TODO: While str contains {keyword} replace with value from config
+        # TODO: use regex
+
+        # Return Cross OS path
+        return clean_str.replace('/', os.sep)
 
     def get_sub_config_path(self, sub_config):
         data_file = open(self.base_paths, 'r')

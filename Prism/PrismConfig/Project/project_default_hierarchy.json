@@ -1,0 +1,25 @@
+{
+  "assets_folder": "{scenes}/Assets",
+  "shots_folder": "{scenes}/Shots",
+
+  "asset_export": "{assets_folder}/{asset_name}/Export",
+  "asset_playblasts": "{assets_folder}/{asset_name}/Playblasts",
+  "asset_rendering": "{assets_folder}/{asset_name}/Rendering",
+  "asset_scenefiles": "{assets_folder}/{asset_name}/Scenefiles",
+
+  "shot_export": "{shots_folder}/{shot_name}/Export",
+  "shot_playblasts": "{shots_folder}/{shot_name}/Playblasts",
+  "shot_rendering": "{shots_folder}/{shot_name}/Rendering",
+  "shot_scenefiles": "{shots_folder}/{shot_name}/Scenefiles",
+
+  "2d_render": "2dRender/{task_name}/{task_version}",
+  "3d_render": "3dRender/{task_name}/{task_version}/{aov}",
+
+  "asset_scenefile": "{asset_scenefiles}/{step}/{scenefile}",
+  "asset_2d_render": "{asset_rendering}/{2d_render}",
+  "asset_3d_render": "{asset_rendering}/{3d_render}",
+
+  "shot_scenefile": "{shot_scenefiles}/{step}/{category}/{scenefile}",
+  "shot_2d_render": "{shot_rendering}/{2d_render}",
+  "shot_3d_render": "{shot_rendering}/{3d_render}"
+}

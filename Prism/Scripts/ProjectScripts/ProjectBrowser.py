@@ -31,7 +31,7 @@
 # along with Prism.  If not, see <https://www.gnu.org/licenses/>.
 
 
-
+from pprint import pprint
 import sys, os, datetime, shutil, ast, time, traceback, random, platform, imp
 
 prismRoot = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -112,6 +112,46 @@ except:
 		os.remove(modPath)
 	import CreateItem
 
+class WaitingWindow():
+    def __init__(self, parentWindow, progresseBar = False):
+        self.parentWindow = parentWindow
+
+        self.subWindow = QDialog(self.parentWindow)
+        self.subWindow.setWindowTitle("Prism is processing")
+
+        self.subWindow.setMinimumSize(QSize(250, 100))
+        self.subWindow.setMaximumSize(QSize(250, 100))
+        self.subWindow.resize(250, 100)
+
+        lay_vMainLayout = QVBoxLayout(self.subWindow)
+        lay_vMainLayout.setSpacing(0)
+        lbl_title = QLabel()
+        lbl_title.setText("Please wait...")
+        lbl_title.setMaximumSize(QSize(999999, 25))
+        lbl_title.setAlignment(Qt.AlignCenter)
+        lay_vMainLayout.addWidget(lbl_title)
+        if progresseBar:
+            self.pba_progress = QProgressBar()
+            self.pba_progress.setObjectName("pba_progress")
+            self.pba_progress.setRange(0, 0)
+            self.pba_progress.setValue(0)
+            lay_vMainLayout.addWidget(self.pba_progress)
+
+        self.subWindow.open()
+        self.subWindow.update()
+
+    def update(self):
+        self.subWindow.update()
+
+    def forceUpdate(self):
+        self.subWindow.repaint()
+
+    def updateProgress(self, progress01):
+        if progress01 == 1:
+            self.close()
+
+    def close(self):
+        self.subWindow.accept()
 
 class ProjectBrowser(QMainWindow, ProjectBrowser_ui.Ui_mw_ProjectBrowser):
 	def __init__(self, core):
@@ -4228,15 +4268,30 @@ class ProjectBrowser(QMainWindow, ProjectBrowser_ui.Ui_mw_ProjectBrowser):
 			rcmenu.addMenu(cvtMenu)
 			self.core.appPlugin.setRCStyle(self, cvtMenu)
 
+		if len(mediaPlayback["seq"]) == 1 or mediaPlayback["prvIsSequence"]:
+			sendToMenu = QMenu("Send to")
+
+			if not self.curRVersion.endswith(" (local)") and self.core.getConfig('paths', "dailies", configPath=self.core.prismIni) is not None:
+				dliAct = QAction("Send to dailies", self)
+				dliAct.triggered.connect(lambda: self.sendToDailies(mediaPlayback=mediaPlayback))
+				sendToMenu.addAction(dliAct)
+
+			qtAct = QAction("Delivery", self)
+			qtAct.triggered.connect(lambda: self.sendTo(mediaPlayback))
+			sendToMenu.addAction(qtAct)
+
+			rcmenu.addMenu(sendToMenu)
+			self.core.appPlugin.setRCStyle(self, sendToMenu)
+
 		if self.tbw_browser.currentWidget().property("tabType") == "Shots" and len(mediaPlayback["seq"]) > 0:
 			prvAct = QAction("Set as shotpreview", self)
 			prvAct.triggered.connect(self.setPreview)
 			rcmenu.addAction(prvAct)
 
-		if len(mediaPlayback["seq"]) > 0 and not self.curRVersion.endswith(" (local)") and self.core.getConfig('paths', "dailies", configPath=self.core.prismIni) is not None:
-			dliAct = QAction("Send to dailies", self)
-			dliAct.triggered.connect(lambda: self.sendToDailies(mediaPlayback=mediaPlayback))
-			rcmenu.addAction(dliAct)
+		# if len(mediaPlayback["seq"]) > 0 and not self.curRVersion.endswith(" (local)") and self.core.getConfig('paths', "dailies", configPath=self.core.prismIni) is not None:
+		# 	dliAct = QAction("Send to dailies", self)
+		# 	dliAct.triggered.connect(lambda: self.sendToDailies(mediaPlayback=mediaPlayback))
+		# 	rcmenu.addAction(dliAct)
 
 		if self.core.appPlugin.appType == "2d" and len(mediaPlayback["seq"]) > 0:
 			impAct = QAction("Import images...", self)
@@ -4316,6 +4371,54 @@ class ProjectBrowser(QMainWindow, ProjectBrowser_ui.Ui_mw_ProjectBrowser):
 		self.core.copyToClipboard(dailiesFolder)
 
 		QMessageBox.information(self.core.messageParent, "Dailies", "The version was sent to the current dailies folder. (path in clipboard)")
+
+	@err_decorator
+	def copyFiles(self, seq, basepath, outFolder):
+		for frameName in seq:
+			sourcePath = os.path.join(basepath, frameName)
+			shutil.copy(sourcePath, outFolder)
+
+	@err_decorator
+	def sendTo(self, mediaPlayback, outFolderName=None):
+		if mediaPlayback is None:
+			mediaPlayback = self.mediaPlaybacks["shots"]
+
+		dailiesName = self.core.getConfig('paths', "dailies", configPath=self.core.prismIni)
+
+		curDate = time.strftime("%Y_%m_%d", time.localtime())
+
+		prvData = mediaPlayback["seq"][0].split(self.core.filenameSeperator)
+
+		refName = ""
+
+		if self.tbw_browser.currentWidget().property("tabType") == "Assets":
+			refName += prvData[0] + self.core.filenameSeperator
+		elif self.tbw_browser.currentWidget().property("tabType") == "Shots":
+			refName += prvData[0] + self.core.filenameSeperator + prvData[1] + self.core.filenameSeperator
+
+		refName += self.curRTask + self.core.filenameSeperator + self.curRVersion
+		if self.curRLayer != "":
+			refName += self.core.filenameSeperator + self.curRLayer
+
+		sourcePath = mediaPlayback["basePath"]
+
+		if not outFolderName:
+			outFolderName = self.core.getConfig('paths', "delivery", configPath=self.core.prismIni)
+
+		outFolder = os.path.join(self.core.projectPath, outFolderName, curDate, refName)
+
+		if not os.path.exists(outFolder):
+			os.makedirs(outFolder)
+
+		spinnerWin = WaitingWindow(self)
+		spinnerWin.forceUpdate()
+		self.copyFiles(mediaPlayback["seq"], sourcePath, outFolder)
+		spinnerWin.close()
+
+		self.core.copyToClipboard(outFolder)
+
+		QMessageBox.information(self.core.messageParent, "OUT",
+								"The version was sent to the OUT folder. (path in clipboard)")
 
 
 	@err_decorator

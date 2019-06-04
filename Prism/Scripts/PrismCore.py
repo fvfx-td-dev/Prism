@@ -30,16 +30,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Prism.  If not, see <https://www.gnu.org/licenses/>.
 
-
-
-import sys, os, threading, shutil, time, socket, traceback, imp, platform, random, errno, stat
+from pprint import pprint
+import sys, os, threading, shutil, time, socket, traceback, platform, random, errno, stat
 
 #check if python 2 or python 3 is used
 if sys.version[0] == "3":
 	from configparser import ConfigParser
+	import importlib as imp
 	pVersion = 3
 else:
 	from ConfigParser import ConfigParser
+	import imp
 	pVersion = 2
 
 prismRoot = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -86,8 +87,6 @@ except:
 		os.remove(modPath)
 	import EnterText
 
-
-
 # Timer, which controls the autosave popup, when the autosave in the DCC is diabled
 class asTimer(QObject):
 	finished = Signal()
@@ -108,7 +107,7 @@ class asTimer(QObject):
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			erStr = ("ERROR - asTimer run:\n%s" % traceback.format_exc())
-			print (erStr)
+			pprint(erStr)
 
 	def stopThread(self):
 		if self.active:
@@ -2259,7 +2258,7 @@ class PrismCore():
 				if self.uiAvailable:
 					QMessageBox.warning(self.messageParent,"Could not save the file", "The current file is not inside the Pipeline.\nUse the Project Browser to create a file in the Pipeline.")
 				else:
-					print ("Could not save the file. The current file is not inside the Pipeline.")
+					pprint("Could not save the file. The current file is not inside the Pipeline.")
 
 				return False
 				
@@ -2702,7 +2701,7 @@ class PrismCore():
 			if action == 0:
 				self.setFrameRange(shotRange[0], shotRange[1])
 		else:
-			print (msgString)
+			pprint(msgString)
 
 
 	@err_decorator
@@ -3336,7 +3335,7 @@ except Exception as e:
 		try:
 
 			ptext = "An unknown Prism error occured.\nThe error was logged.\nIf you want to help improve Prism, please send this error to the developer.\n\nYou can contact the pipeline administrator or the developer, if you have any questions on this.\n\nMake sure you use the latest Prism version by using the automatic update option in the Prism Settings.\n\n"
-		#	print (text)
+		#	pprint(text)
 
 			text += "\n\n"
 
@@ -3407,11 +3406,11 @@ except Exception as e:
 				if "UnicodeDecodeError" in text or "UnicodeEncodeError" in text:
 					QMessageBox.information(self.messageParent, "Prism", "The previous error might be caused by the use of special characters (like ö or é). Prism doesn't support this at the moment. Make sure you remove these characters from your filepaths.".decode("utf8"))
 			else:
-				print (text)
+				pprint(text)
 			
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			print ("ERROR - writeErrorLog - %s - %s - %s\n\n" % (str(e), exc_type, exc_tb.tb_lineno))
+			pprint("ERROR - writeErrorLog - %s - %s - %s\n\n" % (str(e), exc_type, exc_tb.tb_lineno))
 
 
 	def sendError(self, errorText):
@@ -3451,10 +3450,8 @@ except Exception as e:
 
 		action = msg.exec_()
 
-
-
 if __name__ == "__main__":
-	sys.path.append(os.path.join(prismRoot, "PythonLibs", "Python27"))
+	sys.path.append(os.path.join(prismRoot, "PrismFiles", "PythonLibs", "Python27"))
 	qapp = QApplication(sys.argv)
 	from UserInterfacesPrism import qdarkstyle
 	qapp.setStyleSheet(qdarkstyle.load_stylesheet(pyside=True))

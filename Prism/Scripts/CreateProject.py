@@ -31,7 +31,7 @@
 # along with Prism.  If not, see <https://www.gnu.org/licenses/>.
 
 
-
+from pprint import pprint
 import sys, os, copy, shutil, imp, time, traceback, platform
 
 prismRoot = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -218,7 +218,9 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 			pos.setY(pos.y()-23)
 			idx = self.tw_dirStruct.indexAt(pos)
 
-			for i in ["Scenes*", "Assets*", "Dailies"]:
+			folders = self.core.config_reader.get_data("project_default_structure", key="required_folders")
+			folders += self.core.config_reader.get_data("project_default_structure", key="optional_folders")
+			for i in folders:
 				if i not in existingTypes:
 					cAct = QAction(i, self)
 					cAct.triggered.connect(lambda y=None, x=i: model.setData(idx, x))
@@ -295,7 +297,7 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 
 		#check valid project name
 		if self.e_name.text() == "":
-			QMessageBox.warning(self.core.messageParent,"Warning", "The project name is invalid")
+			QMessageBox.warning(self.core.messageParent, "Warning", "The project name is invalid")
 			return
 
 		#create project folder
@@ -303,14 +305,14 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 		self.path = path
 
 		if not os.path.isabs(path):
-			QMessageBox.warning(self.core.messageParent,"Warning", "The project path is invalid")
+			QMessageBox.warning(self.core.messageParent, "Warning", "The project path is invalid")
 			return
 
 		if not os.path.exists(path):
 			try:
 				os.makedirs(path)
 			except:
-				QMessageBox.warning(self.core.messageParent,"Warning", "The project folder could not be created")
+				QMessageBox.warning(self.core.messageParent, "Warning", "The project folder could not be created")
 				return
 		else:
 			if not os.listdir(path) == []:
@@ -333,7 +335,7 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 				pfolders.append([model.index(i,0).data() + fName, model.index(i,2).data()])
 
 		#check if all required folders are defined
-		req = ["Scenes*", "Assets*"]
+		req = self.core.config_reader.get_data("project_default_structure", key="required_folders")
 
 		for i in req:
 			if i not in [x[1] for x in pfolders]:
@@ -369,12 +371,16 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 		inipath = os.path.join(path, "00_Pipeline", "pipeline.ini")
 
 		for i in pfolders:
+			pprint(i)
+
 			if i[1] == "Scenes*":
 				scname = i[0]
 			if i[1] == "Assets*":
 				assetname = i[0]
 			if i[1] == "Dailies":
 				dailiesname = i[0]
+			if i[1] == "Delivery*":
+				deliveryname = i[0]
 
 		cfolders = [os.path.join(path, scname, "Assets"), os.path.join(path, scname, "Shots"), os.path.join(path, assetname, "Textures"), os.path.join(path, assetname, "HDAs")]
 
@@ -398,6 +404,7 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 		cData.append(['paths', 'pipeline', "00_Pipeline"])
 		cData.append(['paths', 'scenes', scname])
 		cData.append(['paths', 'assets', assetname])
+		cData.append(['paths', 'delivery', deliveryname])
 		if "dailiesname" in locals():
 			cData.append(['paths', 'dailies', dailiesname])
 

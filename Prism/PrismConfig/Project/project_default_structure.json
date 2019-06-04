@@ -1,4 +1,6 @@
 {
+  "required_folders": ["Scenes*", "Assets*", "Delivery*"],
+  "optional_folders": ["Dailies**"],
   "default_config": [
     {
       "name": "Management",
@@ -18,11 +20,11 @@
     },
     {
       "name": "Dailies",
-      "type": "Dailies*"
+      "type": "Dailies**"
     },
     {
-      "name": "Out",
-      "type": "Default"
+      "name": "Delivery",
+      "type": "Delivery*"
     }
   ]
 }

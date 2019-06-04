@@ -74,7 +74,17 @@ class Prism_PluginEmpty_Functions(object):
 	# the following function are called by Prism at specific events, which are indicated by the function names
 	# you can add your own code to any of these functions.
 	@err_decorator
+	def onProjectCreated(self, origin, projectPath, projectName):
+		pass
+
+
+	@err_decorator
 	def onProjectChanged(self, origin):
+		pass
+
+
+	@err_decorator
+	def projectBrowser_loadUI(self, origin):
 		pass
 
 
@@ -129,6 +139,11 @@ class Prism_PluginEmpty_Functions(object):
 
 
 	@err_decorator
+	def onAboutToSaveFile(self, origin, filepath):
+		pass
+
+
+	@err_decorator
 	def onSaveFile(self, origin, filepath):
 		pass
 
@@ -150,6 +165,11 @@ class Prism_PluginEmpty_Functions(object):
 
 
 	@err_decorator
+	def onStepDlgOpen(self, origin, dialog):
+		pass
+
+
+	@err_decorator
 	def onStepCreated(self, origin, entity, stepname, path, settings):
 		# entity: "asset" or "shot"
 		# settings: dictionary containing "createDefaultCategory", which holds a boolean (settings["createDefaultCategory"])
@@ -157,7 +177,18 @@ class Prism_PluginEmpty_Functions(object):
 
 
 	@err_decorator
+	def onCategroyDlgOpen(self, origin, catDialog):
+		pass
+
+
+	@err_decorator
 	def onCategoryCreated(self, origin, catname, path):
+		pass
+
+
+	@err_decorator
+	def onShotDlgOpen(self, origin, shotDialog, shotName=None):
+		# gets called just before the "Create Shot"/"Edit Shot" dialog opens. Check if "shotName" is None to check if a new shot will be created or if an existing shot will be edited.
 		pass
 
 
@@ -169,6 +200,11 @@ class Prism_PluginEmpty_Functions(object):
 	@err_decorator
 	def openPBFileContextMenu(self, origin, rcmenu):
 		# gets called before "rcmenu" get displayed. Can be used to modify the context menu when the user right clicks in the scenefile lists of the Project Browser
+		pass
+
+
+	@err_decorator
+	def openPBListContextMenu(self, origin, rcmenu, listWidget, item, path):
 		pass
 
 

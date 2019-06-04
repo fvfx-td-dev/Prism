@@ -78,29 +78,42 @@ class Prism_Maya_Functions(object):
 
 	@err_decorator
 	def startup(self, origin):
-		for obj in qApp.topLevelWidgets():
-			if obj.objectName() == 'MayaWindow':
-				mayaQtParent = obj
-				break
-		else:
-			return False
+		if self.core.uiAvailable:
+			if QApplication.instance() is None:
+				return False
 
-		try:
-			topLevelShelf = mel.eval('string $m = $gShelfTopLevel')
-		except:
-			return False
+			if not hasattr(qApp, "topLevelWidgets"):
+				return False
 
-		if cmds.shelfTabLayout(topLevelShelf, query=True, tabLabelIndex=True) == None:
-			return False
+			for obj in qApp.topLevelWidgets():
+				if obj.objectName() == 'MayaWindow':
+					mayaQtParent = obj
+					break
+			else:
+				return False
+
+			try:
+				topLevelShelf = mel.eval('string $m = $gShelfTopLevel')
+			except:
+				return False
+
+			if cmds.shelfTabLayout(topLevelShelf, query=True, tabLabelIndex=True) == None:
+				return False
 
 		origin.timer.stop()
 
-		if platform.system() == "Darwin":
-			origin.messageParent = QWidget()
-			origin.messageParent.setParent(mayaQtParent, Qt.Window)
-			origin.messageParent.setWindowFlags(origin.messageParent.windowFlags() ^ Qt.WindowStaysOnTopHint)
+		if self.core.uiAvailable:
+			if platform.system() == "Darwin":
+				origin.messageParent = QWidget()
+				origin.messageParent.setParent(mayaQtParent, Qt.Window)
+				if self.core.useOnTop:
+					origin.messageParent.setWindowFlags(origin.messageParent.windowFlags() ^ Qt.WindowStaysOnTopHint)
+			else:
+				origin.messageParent = mayaQtParent
+
+			origin.startasThread()
 		else:
-			origin.messageParent = mayaQtParent
+			origin.messageParent = QWidget()
 
 		cmds.loadPlugin( 'AbcExport.mll', quiet=True )
 		cmds.loadPlugin( 'AbcImport.mll', quiet=True )
@@ -108,9 +121,7 @@ class Prism_Maya_Functions(object):
 
 		api.MSceneMessage.addCallback(api.MSceneMessage.kAfterOpen, origin.sceneOpen)
 
-		origin.startasThread()
-
-
+		
 	@err_decorator
 	def autosaveEnabled(self, origin):
 		return cmds.autoSave( q=True, enable=True )
@@ -180,7 +191,7 @@ class Prism_Maya_Functions(object):
 
 
 	@err_decorator
-	def saveScene(self, origin, filepath):
+	def saveScene(self, origin, filepath, details={}):
 		cmds.file(rename=filepath)
 		try:
 			return cmds.file(save=True, type="mayaAscii")
@@ -585,7 +596,6 @@ class Prism_Maya_Functions(object):
 				expStr = 'AbcExport -j "-frameRange %s %s %s -worldSpace -uvWrite -writeVisibility -stripNamespaces -file \\\"%s\\\""' % (startFrame, endFrame, rootString, outputName.replace("\\","\\\\\\\\"))
 
 				if not origin.chb_exportNamespaces.isChecked():
-					print "strip"
 					expStr = expStr.replace("-stripNamespaces", "")
 
 				mel.eval(expStr)
@@ -669,7 +679,11 @@ class Prism_Maya_Functions(object):
 				elif expType == ".mb":
 					typeStr = "mayaBinary"
 				pr = origin.chb_preserveReferences.isChecked()
-				cmds.file(outputName, force=True, exportSelected=True, preserveReferences=pr, type=typeStr)
+				try:
+					cmds.file(outputName, force=True, exportSelected=True, preserveReferences=pr, type=typeStr)
+				except Exception as e:
+					return "Canceled: %s" % str(e)
+
 				for i in expNodes:
 					if cmds.nodeType(i) == "xgmPalette" and cmds.attributeQuery("xgFileName", node=i, exists=True):
 						xgenName = cmds.getAttr(i + ".xgFileName")
@@ -1106,6 +1120,9 @@ class Prism_Maya_Functions(object):
 
 	@err_decorator
 	def sm_render_startLocalRender(self, origin, outputName, rSettings):
+		if not self.core.uiAvailable:
+			return "Execute Canceled: Local rendering is supported in the Maya UI only."
+
 		mel.eval ('RenderViewWindow;')
 		mel.eval ('showWindow renderViewWindow;')
 		mel.eval ('tearOffPanel "Render View" "renderWindowPanel" true;')
@@ -1226,6 +1243,8 @@ class Prism_Maya_Functions(object):
 		if "endFrame" in rSettings:
 			cmds.setAttr("defaultRenderGlobals.endFrame", rSettings["endFrame"])
 		if "vr_imageFilePrefix" in rSettings:
+			if rSettings["vr_imageFilePrefix"] is None:
+				rSettings["vr_imageFilePrefix"] = ""
 			cmds.setAttr("vraySettings.fileNamePrefix", rSettings["vr_imageFilePrefix"], type="string")
 		if "vr_sepFolders" in rSettings:
 			cmds.setAttr("vraySettings.relements_separateFolders", rSettings["vr_sepFolders"])
@@ -1417,6 +1436,10 @@ class Prism_Maya_Functions(object):
 
 	@err_decorator
 	def sm_import_importToApp(self, origin, doImport, update, impFileName):
+		if not os.path.exists(impFileName):
+			QMessageBox.warning(self.core.messageParent, "ImportFile", "File doesn't exist:\n\n%s" % impFileName)
+			return
+
 		fileName = os.path.splitext(os.path.basename(impFileName))
 		importOnly = True
 		importedNodes = []

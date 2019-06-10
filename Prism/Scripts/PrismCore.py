@@ -60,7 +60,7 @@ except:
 	try:
 		if "standalone" in sys.argv:
 			raise
-			
+
 		from PySide.QtCore import *
 		from PySide.QtGui import *
 		psVersion = 1
@@ -120,6 +120,7 @@ class PrismCore():
 	def __init__(self, app="Standalone", prismArgs=[]):
 		#QWidget.__init__(self)
 		self.prismIni = ""
+		self.app_name = app
 
 		self.config_reader = ConfigReader.ConfigReader()
 
@@ -181,7 +182,7 @@ class PrismCore():
 				pyLibs = os.path.join(self.prismRoot, "PythonLibs", "Python3")
 				pyLibs = os.path.join(self.prismRoot, "PythonLibs", libFolder)
 				QCoreApplication.addLibraryPath(os.path.join(self.prismRoot, "PythonLibs", libFolder, "PySide2", "plugins"))
-				
+
 			cpLibs = os.path.join(self.prismRoot, "PythonLibs", "CrossPlatform")
 			win32Libs = os.path.join(cpLibs, "win32")
 
@@ -237,7 +238,7 @@ class PrismCore():
 		customPlugins = []
 		rfManagers = []
 		prjManagers = []
-	
+
 		if pluginLocation is None:
 			self.unloadedAppPlugins = {}
 			self.customPlugins = {}
@@ -355,7 +356,7 @@ class PrismCore():
 		for k in pluginDicts:
 			for i in k:
 				curPlugins.append([i, k])
-	
+
 		for i in curPlugins:
 			self.unloadPlugin(i[0], i[1])
 
@@ -385,7 +386,7 @@ class PrismCore():
 			for i in k:
 				if k[i].location == "prismProject":
 					prjPlugins.append([i, k])
-	
+
 		for i in prjPlugins:
 			self.unloadPlugin(i[0], i[1])
 
@@ -548,7 +549,7 @@ class PrismCore():
 
 		if curPrj != "":
 			self.changeProject(curPrj)
-			if not "silent" in self.prismArgs and self.getConfig("globals", "showonstartup", ptype="bool") != False and self.uiAvailable:
+			if not "silent" in self.prismArgs and (self.getConfig("globals", "showonstartup", ptype="bool") != False or self.appPlugin.pluginName == "Standalone") and self.uiAvailable:
 				self.projectBrowser()
 
 		if self.getCurrentFileName() != "":
@@ -689,7 +690,7 @@ class PrismCore():
 	def changeProject(self, inipath, openUi="", settingsTab=1):
 		if inipath is None:
 			return
-			
+
 		delModules = []
 
 		for i in sys.path:
@@ -780,7 +781,7 @@ class PrismCore():
 		modulePath = os.path.join(self.projectPath, "00_Pipeline", "CustomModules", "Python")
 		if not os.path.exists(modulePath):
 			os.makedirs(modulePath)
-		
+
 		sys.path.append(modulePath)
 
 		pluginPath = os.path.join(self.projectPath, "00_Pipeline", "Plugins")
@@ -1117,10 +1118,10 @@ class PrismCore():
 		if not self.appPlugin.hasQtParent:
 			if self.appPlugin.pluginName != "Standalone" and self.useOnTop:
 				win.setWindowFlags(win.windowFlags() ^ Qt.WindowStaysOnTopHint)
-	
+
 		if not self.parentWindows or not self.uiAvailable:
 			return
-			
+
 		win.setParent(self.messageParent, Qt.Window)
 
 		if platform.system() == "Darwin" and self.useOnTop:
@@ -1187,10 +1188,10 @@ class PrismCore():
 			url = "https://prism-pipeline.readthedocs.io/en/latest/"
 		elif location == "downloads":
 			url = "https://prism-pipeline.com/downloads/"
-			
+
 		import webbrowser
 		webbrowser.open(url)
-		
+
 
 	@err_decorator
 	def stateManager(self, stateDataPath=None, restart=False):
@@ -1213,7 +1214,7 @@ class PrismCore():
 
 
 		if hasattr(self, "user") and self.projectPath != None:
-			
+
 		#	if not hasattr(self, "sm"):
 			if True:
 				self.closeSM()
@@ -1261,7 +1262,7 @@ class PrismCore():
 			self.sm.saveEnabled = False
 			if self.sm.isVisible():
 				self.sm.close()
-			del self.sm			
+			del self.sm
 
 			if restart:
 				self.stateManager()
@@ -1271,7 +1272,7 @@ class PrismCore():
 	def projectBrowser(self):
 		if not os.path.exists(self.userini):
 			self.createUserPrefs()
-	
+
 		if not hasattr(self, "projectPath") or self.projectPath == None or not os.path.exists(self.prismIni):
 			curPrj = self.getConfig("globals", "current project")
 			if curPrj != "" and curPrj is not None:
@@ -1299,7 +1300,7 @@ class PrismCore():
 					modPath = imp.find_module("ProjectBrowser")[1]
 					if modPath.endswith(".pyc") and os.path.exists(modPath[:-1]):
 						os.remove(modPath)
-				
+
 					import ProjectBrowser
 				except Exception as e:
 					msgString = "Could not load the ProjectBrowser:\n\n%s" % str(e)
@@ -1307,7 +1308,7 @@ class PrismCore():
 					self.parentWindow(msg)
 					action = msg.exec_()
 					return False
-			
+
 			self.pb = ProjectBrowser.ProjectBrowser(core = self)
 			self.pb.show()
 
@@ -1331,13 +1332,13 @@ class PrismCore():
 				modPath = imp.find_module("DependencyViewer")[1]
 				if modPath.endswith(".pyc") and os.path.exists(modPath[:-1]):
 					os.remove(modPath)
-			
+
 				import DependencyViewer
 			except Exception as e:
 				msgString = "Could not load the DependencyViewer:\n\n%s" % str(e)
 				QMessageBox.warning(self.messageParent, "Prism Error", msgString)
 				return False
-		
+
 		self.dv = DependencyViewer.DependencyViewer(core=self, depRoot=depRoot)
 		if modal:
 			self.dv.exec_()
@@ -1454,7 +1455,7 @@ class PrismCore():
 					msg = "Creating start menu entries failed"
 					QMessageBox.warning(self.messageParent, "Prism", msg)
 
-				
+
 	@err_decorator
 	def validateUser(self):
 		uname = self.getConfig("globals", "username")
@@ -1513,7 +1514,7 @@ class PrismCore():
 			abbrev = userName[0][:3].lower()
 
 		return abbrev
-		
+
 
 	@err_decorator
 	def changeUserRejected(self):
@@ -1589,7 +1590,7 @@ class PrismCore():
 
 			if hookName in sys.modules:
 				del sys.modules[hookName]
-			
+
 			if os.path.exists(hookPath+"c"):
 				try:
 					os.remove(hookPath+"c")
@@ -1604,7 +1605,7 @@ class PrismCore():
 
 		if configPath is None or configPath == "":
 			return
-			
+
 		isUserIni = configPath == self.userini
 
 		if isUserIni and not os.path.exists(configPath):
@@ -1625,7 +1626,7 @@ class PrismCore():
 				warnStr = "The Prism preferences file seems to be corrupt.\n\nIt will be reset, which means all local Prism settings will fall back to their defaults.\nYou will need to set your last project again, but no project files (like scenefiles or renderings) are lost."
 			else:
 				warnStr = "Cannot read the following file:\n\n%s" % configPath
-				
+
 			msg = QMessageBox(QMessageBox.Warning, "Warning", warnStr, QMessageBox.Ok, parent=self.messageParent)
 			msg.setFocus()
 			action = msg.exec_()
@@ -1960,7 +1961,7 @@ class PrismCore():
 			elif glbDstname.startswith(shotPath):
 				scenetype = "Shot"
 			else:
-				return 
+				return
 
 		if scenetype == "Asset":
 			numvers = 2
@@ -1979,7 +1980,7 @@ class PrismCore():
 			for i in os.walk(dstname.replace(self.projectPath, self.localProjectPath)):
 				files += [os.path.join(i[0], x) for x in i[2]]
 				break
-			
+
 		highversion = [0, ""]
 		for i in files:
 			if fileTypes != "*" and os.path.splitext(i)[1] not in fileTypes:
@@ -1995,7 +1996,7 @@ class PrismCore():
 
 				if version > highversion[0]:
 					highversion = [version, i]
-			
+
 		if getExistingPath:
 			return highversion[1]
 		else:
@@ -2028,7 +2029,7 @@ class PrismCore():
 				else:
 					taskDirs += i[1]
 				break
-			
+
 		highversion = 0
 		for i in taskDirs:
 			fname = i.split(self.filenameSeperator)
@@ -2053,10 +2054,10 @@ class PrismCore():
 				hVersion = "v0001"
 
 			return hVersion
-			
+
 		if getExisting and highversion != 0:
 			return "v" + format(highversion, '04')
-		else:		
+		else:
 			return "v" + format(highversion + 1, '04')
 
 
@@ -2253,7 +2254,7 @@ class PrismCore():
 
 			if not hasattr(self, "user"):
 				return False
-		
+
 			if not self.fileInPipeline():
 				if self.uiAvailable:
 					QMessageBox.warning(self.messageParent,"Could not save the file", "The current file is not inside the Pipeline.\nUse the Project Browser to create a file in the Pipeline.")
@@ -2261,7 +2262,7 @@ class PrismCore():
 					pprint("Could not save the file. The current file is not inside the Pipeline.")
 
 				return False
-				
+
 			if self.useLocalFiles:
 				filepath = self.fixPath(filepath).replace(self.projectPath, self.localProjectPath)
 				if not os.path.exists(os.path.dirname(filepath)):
@@ -2290,7 +2291,7 @@ class PrismCore():
 					newfname += i + self.filenameSeperator
 				newfname = newfname[:-1]
 				filepath = os.path.join(dstname, newfname)
-		
+
 		filepath = filepath.replace("\\","/")
 		outLength = len(filepath)
 		if platform.system() == "Windows" and outLength > 255:
@@ -2310,7 +2311,7 @@ class PrismCore():
 		self.callback(name="onSaveFile", types=["custom"], args=[self, filepath])
 
 		if result == False:
-			return False			
+			return False
 
 		if not prismReq:
 			return filepath
@@ -2325,7 +2326,7 @@ class PrismCore():
 			if self.useLocalFiles:
 				pubFile = self.fixPath(filepath).replace(self.localProjectPath, self.projectPath)
 				self.copySceneFile(filepath, pubFile)
-		
+
 			fBase = os.path.splitext(os.path.basename(pubFile))[0]
 
 			infoData = {"filename":os.path.basename(pubFile)}
@@ -2617,7 +2618,7 @@ class PrismCore():
 		for i in paths:
 			if not os.path.exists(os.path.dirname(i[0])):
 				continue
-			
+
 			versionData = os.path.dirname(os.path.dirname(i[0])).rsplit(os.sep, 1)[1].split(self.filenameSeperator)
 
 			if len(versionData) != 3 or not self.getConfig('paths', "scenes", configPath=self.prismIni) in i[0]:
@@ -2688,7 +2689,7 @@ class PrismCore():
 		curRange = self.appPlugin.getFrameRange(self)
 
 		if int(curRange[0]) == shotRange[0] and int(curRange[1]) == shotRange[1]:
-			return			
+			return
 
 		msgString = "The framerange of the current scene doesn't match the framerange of the shot:\n\nFramerange of current scene:\n%s - %s\n\nFramerange of shot %s:\n%s - %s" % (int(curRange[0]), int(curRange[1]), shotName, shotRange[0], shotRange[1])
 
@@ -2760,7 +2761,7 @@ class PrismCore():
 			lay_info.setContentsMargins(10,10,10,10)
 			w_info = QWidget()
 			w_info.setLayout(lay_info)
-		
+
 			bb_info = QDialogButtonBox()
 
 			bb_info.addButton("Continue", QDialogButtonBox.RejectRole)
@@ -2856,7 +2857,7 @@ current project.\n\nYour current version: %s\nVersion configured in project: %s\
 				hVersion = fnameData[2]
 			else:
 				hVersion = self.getHighestTaskVersion(outputPath, getExisting=useLastVersion, ignoreEmpty=ignoreEmpty)
-			
+
 			outputFile = fnameData[0] + self.filenameSeperator + taskName + self.filenameSeperator + hVersion + ".####." + fileType
 		else:
 			outputName = "FileNotInPipeline"
@@ -2888,7 +2889,7 @@ current project.\n\nYour current version: %s\nVersion configured in project: %s\
 		else:
 			if self.appPlugin.isRendering[0]:
 				return self.appPlugin.isRendering[1]
-	
+
 		return outputName
 
 
@@ -3020,7 +3021,7 @@ except Exception as e:
 	sys.stdout.write('failed %%s' %% e)
 """ % (self.prismRoot.replace("\\", "\\\\"), self.prismRoot.replace("\\", "\\\\"), subject, text.replace("\\", "\\\\").replace("\"", "\\\"").replace("\'", "\\\""))
 		#	print pStr
-		
+
 			if platform.system() == "Windows":
 				pythonPath = os.path.join(self.prismRoot, "Python27", "pythonw.exe")
 			else:
@@ -3054,7 +3055,7 @@ except Exception as e:
 			sa_warns = QScrollArea()
 			sa_warns.setWidget(l_warnings)
 			sa_warns.setWidgetResizable(True)
-		
+
 			bb_warn = QDialogButtonBox()
 
 			bb_warn.addButton("Retry", QDialogButtonBox.AcceptRole)
@@ -3076,7 +3077,7 @@ except Exception as e:
 			action = mailDlg.exec_()
 
 			if action == 1:
-				self.sendEmail(text, subject)			
+				self.sendEmail(text, subject)
 
 
 		if "waitmsg" in locals() and waitmsg.isVisible():
@@ -3162,7 +3163,7 @@ except Exception as e:
 			except:
 				QMessageBox.warning(self.messageParent, "Prism update", "Could not remove temp directory:\n%s" % targetdir)
 				return
-		
+
 		if source == "github":
 			waitmsg = QMessageBox(QMessageBox.NoIcon, "Prism update", "Downloading Prism - please wait..", QMessageBox.Cancel)
 			waitmsg.setStandardButtons(0)
@@ -3188,7 +3189,7 @@ except Exception as e:
 			filepath = os.path.join(targetdir, "Prism_update.zip")
 			if not os.path.exists(os.path.dirname(filepath)):
 				os.makedirs(os.path.dirname(filepath))
-				
+
 			with open(filepath, "wb") as f :
 				f.write(data)
 
@@ -3241,7 +3242,7 @@ except Exception as e:
 
 		if os.path.exists(targetdir):
 			shutil.rmtree(targetdir, ignore_errors=False, onerror=self.handleRemoveReadonly)
-			
+
 		try:
 			import psutil
 		except:
@@ -3314,7 +3315,7 @@ except Exception as e:
 			w_warns.setLayout(lay_warns)
 			sa_warns.setWidget(w_warns)
 			sa_warns.setWidgetResizable(True)
-		
+
 			bb_warn = QDialogButtonBox()
 
 			bb_warn.addButton("OK", QDialogButtonBox.AcceptRole)
@@ -3407,7 +3408,7 @@ except Exception as e:
 					QMessageBox.information(self.messageParent, "Prism", "The previous error might be caused by the use of special characters (like ö or é). Prism doesn't support this at the moment. Make sure you remove these characters from your filepaths.".decode("utf8"))
 			else:
 				pprint(text)
-			
+
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			pprint("ERROR - writeErrorLog - %s - %s - %s\n\n" % (str(e), exc_type, exc_tb.tb_lineno))

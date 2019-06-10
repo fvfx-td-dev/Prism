@@ -370,6 +370,11 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 
 		inipath = os.path.join(path, "00_Pipeline", "pipeline.ini")
 
+		scname = ""
+		assetname = ""
+		dailiesname = ""
+		deliveryname = ""
+
 		for i in pfolders:
 			pprint(i)
 
@@ -377,7 +382,7 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 				scname = i[0]
 			if i[1] == "Assets*":
 				assetname = i[0]
-			if i[1] == "Dailies":
+			if i[1] == "Dailies**":
 				dailiesname = i[0]
 			if i[1] == "Delivery*":
 				deliveryname = i[0]
@@ -405,7 +410,7 @@ class CreateProject(QDialog, CreateProject_ui.Ui_dlg_createProject):
 		cData.append(['paths', 'scenes', scname])
 		cData.append(['paths', 'assets', assetname])
 		cData.append(['paths', 'delivery', deliveryname])
-		if "dailiesname" in locals():
+		if "dailiesname" in locals() or dailiesname:
 			cData.append(['paths', 'dailies', dailiesname])
 
 		for i in self.core.getPluginNames():

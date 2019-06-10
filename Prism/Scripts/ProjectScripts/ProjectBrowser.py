@@ -4417,8 +4417,8 @@ class ProjectBrowser(QMainWindow, ProjectBrowser_ui.Ui_mw_ProjectBrowser):
 
 		self.core.copyToClipboard(outFolder)
 
-		QMessageBox.information(self.core.messageParent, "OUT",
-								"The version was sent to the OUT folder. (path in clipboard)")
+		QMessageBox.information(self.core.messageParent, "Delivery",
+								"The version was sent to the Delivery folder. (path in clipboard)")
 
 
 	@err_decorator

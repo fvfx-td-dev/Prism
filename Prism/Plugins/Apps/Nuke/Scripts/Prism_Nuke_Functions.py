@@ -85,6 +85,7 @@ class Prism_Nuke_Functions(object):
 		if platform.system() != "Windows" and self.core.useOnTop:
 			origin.messageParent.setWindowFlags(origin.messageParent.windowFlags() ^ Qt.WindowStaysOnTopHint)
 
+		'''
 		nuke.menu('Nuke').addCommand( 'Prism/Save Version', origin.saveScene)
 		nuke.menu('Nuke').addCommand( 'Prism/Save Comment', origin.saveWithComment)
 		nuke.menu('Nuke').addCommand( 'Prism/Project Browser', origin.projectBrowser)
@@ -95,6 +96,17 @@ class Prism_Nuke_Functions(object):
 		iconPath = os.path.join(origin.prismRoot, "Scripts", "UserInterfacesPrism", "p_tray.png")
 		toolbar.addMenu( 'Prism', icon=iconPath )
 		toolbar.addCommand( "Prism/WritePrism", lambda: nuke.createNode('WritePrism'))
+		'''
+
+		#>>>Custom menu START
+		nuke.menu('Nuke').addCommand( 'Prism/Project Browser', origin.projectBrowser, 'Ctrl+o', icon="F_explorer.png")
+		nuke.menu('Nuke').addCommand( 'Prism/Save New Version', origin.saveScene, 'Alt+Shift+s')
+		#nuke.menu('Nuke').addCommand( 'Prism/Save Comment', origin.saveWithComment)
+		nuke.menu('Nuke').addCommand( 'Prism/Version to Latest (Reads)', self.updateNukeNodes, 'Alt+Shift+up')
+		prismSlashMenu = nuke.menu('Nuke').addCommand( 'Prism/--------------------------------------------------')
+		nuke.menu('Nuke').addCommand( 'Prism/Prism Settings', origin.prismSettings, icon="F_deeptopos.png")
+		#<<<Custom menu END
+
 
 		nuke.addOnScriptLoad(origin.sceneOpen)
 
